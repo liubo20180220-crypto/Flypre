@@ -2,17 +2,16 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- FIX: 加入 viewport-fit=cover，这是实现“穿透状态栏”的核心开关 -->
+    <!-- FIX: 开启沉浸式视口 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- 初始状态栏颜色 (日间) -->
+    <!-- 初始状态栏颜色 -->
     <meta name="theme-color" content="#3C84D6">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <!-- FIX: 必须设为 black-translucent 才能让背景图顶到状态栏下面 -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="飞前准">
     
-    <!-- PWA 配置 (Base64 内联) -->
+    <!-- PWA 配置 (Base64) -->
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiRmx5cHJlIiwic2hvcnRfbmFtZSI6IkZseXByZSIsImRlc2NyaXB0aW9uIjoi5Y1S5o6o5pe26Ze0IOS7juWuuVxu5Y+RIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMzYjgyZjYiLCJ0aGVtZV9jb2xvciI6IiMzYjgyZjYiLCJvcmllbnRhdGlvbiI6InBvcnRyYWl0IiwiaWNvbnMiOlt7InNyYyI6Imljb24tMTkyLnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiJpY29uLTUxMi5wbmciLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIiwicHVycG9zZSI6ImFueSBtYXNrYWJsZSJ9XX0=">
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -69,17 +68,23 @@
         }
 
         /* --- Loading 动画 --- */
-        @keyframes flyAcross {
+        /* FIX: 飞机路径调整，确保从屏幕中心穿过 */
+        @keyframes flyAcrossCenter {
             0% { 
-                transform: translate3d(-20vmax, 20vmax, 0);
+                /* 从左下角远方 */
+                transform: translate(-50%, -50%) translate3d(-50vmax, 50vmax, 0);
                 opacity: 0;
             }
-            10% {
+            15% {
+                opacity: 1;
+            }
+            85% {
                 opacity: 1;
             }
             100% { 
-                transform: translate3d(120vmax, -120vmax, 0);
-                opacity: 1;
+                /* 飞向右上角远方 */
+                transform: translate(-50%, -50%) translate3d(50vmax, -50vmax, 0);
+                opacity: 0;
             }
         }
 
@@ -92,7 +97,6 @@
         /* 组件样式 */
         input[type=range] { -webkit-appearance: none; background: transparent; }
         
-        /* 把手: #4B97E2 */
         input[type=range]::-webkit-slider-thumb { 
             -webkit-appearance: none; 
             height: 24px; 
@@ -129,15 +133,7 @@
         .hide-scrollbar { scrollbar-width: none; }
 
         .glass-panel-white { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
-        
-        /* 橙色卡片: #ff6000, 70% opacity */
-        .glass-panel-orange { 
-            background: rgba(255, 96, 0, 0.7); 
-            backdrop-filter: blur(8px); 
-            -webkit-backdrop-filter: blur(8px); 
-            border: 1px solid rgba(255, 255, 255, 0.25); 
-            box-shadow: 0 8px 32px rgba(255, 100, 0, 0.25); 
-        }
+        .glass-panel-orange { background: rgba(255, 96, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 8px 32px rgba(255, 100, 0, 0.25); }
 
         .glass-modal { 
             background: rgba(255, 255, 255, 0.85); 
@@ -147,14 +143,14 @@
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1); 
         }
         
-        /* Loading Screen Styles */
+        /* Loading Screen */
         #app-loading {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            /* 背景：使用日间渐变 */
+            /* 保持与 Day 模式一致 */
             background: linear-gradient(to bottom, #3C84D6 0%, #4B97E2 33.33%, #69B1EA 66.66%, #7EBEE9 100%);
             z-index: 9999;
             overflow: hidden; 
@@ -166,20 +162,22 @@
 
         .plane-fly {
             position: absolute;
-            left: 0;
-            bottom: 0;
-            /* 速度放慢1倍 (5s), 轨迹严格45度 */
-            animation: flyAcross 5s linear infinite;
+            top: 50%;
+            left: 50%;
+            /* 初始居中定位 */
+            transform: translate(-50%, -50%);
+            animation: flyAcrossCenter 5s linear infinite;
         }
         
-        /* FIX: 确保 body 和 html 能够响应 viewport-fit */
+        /* FIX: 强制 Body 背景色为日间蓝，避免弹簧效果露白 */
         body, html {
             height: 100%;
             margin: 0;
             padding: 0;
             -webkit-tap-highlight-color: transparent; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #f8fafc;
+            background-color: #3C84D6; 
+            transition: background-color 1s ease-in-out;
         }
     </style>
 </head>
@@ -187,13 +185,11 @@
     
     <!-- Loading Screen -->
     <div id="app-loading">
-        <!-- 下层：飞机动画 (z-0) -->
-        <!-- 飞机缩小 text-[3rem] -->
+        <!-- 飞机：缩小为 text-[3rem] -->
         <div class="plane-fly text-[3rem] z-0 opacity-80 drop-shadow-lg" style="text-shadow: 0 10px 20px rgba(0,0,0,0.1)">
             ✈️
         </div>
-
-        <!-- 上层：LOADING 文字 (z-10) -->
+        <!-- 文字：上层 -->
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center pointer-events-none">
             <p class="text-white text-lg font-black tracking-[0.5em] animate-pulse drop-shadow-md">LOADING</p>
             <div class="w-8 h-1 bg-white/50 mt-2 rounded-full"></div>
@@ -253,8 +249,6 @@
         );
 
         // --- 汽车组 ---
-        
-        // 车1 (Busy) + 2辆反向
         const SceneCarsBusy = () => (<>
             <ScriptCar emoji="🚕" size="2.7rem" duration={5} delay={0} />
             <ScriptCar emoji="🚗" size="2.7rem" duration={4} delay={1.5} />
@@ -262,22 +256,18 @@
             <ScriptCar emoji="🚎" size="4rem" duration={6.6} delay={4.0} />
             <ScriptCar emoji="🚙" size="2.7rem" duration={4.4} delay={6.5} />
             <ScriptCar emoji="🚗" size="2.7rem" duration={4} delay={7.8} />
-            
             <ScriptCar emoji="🚌" size="4rem" duration={4} delay={3.5} reverse={true} zIndex={50} />
             <ScriptCar emoji="🚕" size="2.7rem" duration={3.5} delay={5.0} reverse={true} zIndex={50} />
         </>);
 
-        // 车2 (Race) + 1辆反向
         const SceneCarsRace = () => (<>
             <ScriptCar emoji="🚌" size="4rem" duration={6.6} delay={4} zIndex={10} />
             <ScriptCar emoji="🛺" size="2.7rem" duration={20} delay={0} zIndex={15} />   
             <ScriptCar emoji="🚕" size="2.7rem" duration={5} delay={1} zIndex={25} />
             <ScriptCar emoji="🏎️" size="3.6rem" duration={2} delay={2.5} zIndex={30} customBottom="-2px" />
-            
             <ScriptCar emoji="🚙" size="2.7rem" duration={4} delay={2.5} reverse={true} zIndex={50} />
         </>);
 
-        // 车3 (Service) + 1辆反向 (50%处相遇)
         const SceneCarsService = () => (<>
             <ScriptCar emoji="🚕" size="2.7rem" duration={4} delay={0} reverse={true} zIndex={50} />
             <ScriptCar emoji="🚗" size="2.7rem" duration={3} delay={2.0} zIndex={20} />
@@ -412,7 +402,6 @@
             </div>
         );
 
-        // --- PWA 安装引导组件 ---
         const InstallGuideModal = ({ isOpen, onClose }) => {
             const [isDesktop, setIsDesktop] = useState(false);
             useEffect(() => {
@@ -455,7 +444,7 @@
         const App = () => {
             const [flightTime, setFlightTime] = useState('12:00');
             const [showPicker, setShowPicker] = useState(false);
-            const [version] = useState("V 1.0 (251216-042000) - 144 (Immersive Main UI)"); 
+            const [version] = useState("V 1.0 (251216-020500) - 141 (Visuals Restored)"); 
             
             const [showInstall, setShowInstall] = useState(false);
             
@@ -469,7 +458,6 @@
             
             const [timeOfDay, setTimeOfDay] = useState('day');
 
-            // Loading Screen Logic (2500ms delay)
             useEffect(() => {
                 const loader = document.getElementById('app-loading');
                 if (loader) {
@@ -482,7 +470,6 @@
                 }
             }, []);
 
-            // FIX: Dynamic Theme Color Logic (Only for Android/Desktop, iOS uses translucent)
             useEffect(() => {
                 const themeColors = {
                     sunrise: '#5891D9',
@@ -490,10 +477,15 @@
                     dusk: '#384189',
                     night: '#0E1428'
                 };
+                
                 const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-                if (metaThemeColor && themeColors[timeOfDay]) {
-                    metaThemeColor.setAttribute('content', themeColors[timeOfDay]);
+                const updateTheme = () => {
+                     if (metaThemeColor && themeColors[timeOfDay]) {
+                        metaThemeColor.setAttribute('content', themeColors[timeOfDay]);
+                        document.body.style.backgroundColor = themeColors[timeOfDay];
+                    }
                 }
+                updateTheme();
             }, [timeOfDay]);
 
             useEffect(() => {
@@ -535,8 +527,9 @@
                         <div 
                             className="text-white px-6 relative z-10 overflow-hidden flex flex-col pb-[10.58%] transition-colors duration-1000"
                             style={{ 
-                                height: 'calc(67vw + env(safe-area-inset-top))',
-                                paddingTop: 'env(safe-area-inset-top)'
+                                /* FIX: 恢复 aspect-[100/67] 逻辑，确保高度足够，同时 padding-top 避开刘海 */
+                                aspectRatio: '100/67',
+                                paddingTop: 'env(safe-area-inset-top)' 
                             }}
                         >
                             
@@ -546,7 +539,7 @@
                             <div className={`absolute inset-0 bg-gradient-dusk transition-opacity duration-1000 ease-in-out ${timeOfDay === 'dusk' ? 'opacity-100' : 'opacity-0'}`} />
                             <div className={`absolute inset-0 bg-gradient-night transition-opacity duration-1000 ease-in-out ${timeOfDay === 'night' ? 'opacity-100' : 'opacity-0'}`} />
 
-                            {/* 内容层 z-index 提升 (FIX: Added padding-top compensation) */}
+                            {/* 内容层 z-index 提升 */}
                             <div className="absolute inset-0 z-10 flex flex-col px-6 pb-[10.58%] pt-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
                                 <TrafficController />
                                 
