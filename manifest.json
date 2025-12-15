@@ -1,7 +1,7 @@
 {
-  "name": "赶飞机计算器",
-  "short_name": "Door2Gate",
-  "description": "倒推时间，从容出发",
+  "name": "Flypre",
+  "short_name": "Flypre",
+  "description": "倒推时间 从容出发",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#3b82f6",
