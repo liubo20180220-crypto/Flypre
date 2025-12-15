@@ -2,10 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- FIX: 开启沉浸式视口 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- 初始状态栏颜色 -->
+    <!-- 状态栏颜色：Android/Desktop 使用日间蓝，iOS PWA 由 black-translucent 接管 -->
     <meta name="theme-color" content="#3C84D6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -68,23 +67,17 @@
         }
 
         /* --- Loading 动画 --- */
-        /* FIX: 飞机路径调整，确保从屏幕中心穿过 */
-        @keyframes flyAcrossCenter {
+        @keyframes flyAcross {
             0% { 
-                /* 从左下角远方 */
-                transform: translate(-50%, -50%) translate3d(-50vmax, 50vmax, 0);
+                transform: translate3d(-20vmax, 20vmax, 0);
                 opacity: 0;
             }
-            15% {
-                opacity: 1;
-            }
-            85% {
+            10% {
                 opacity: 1;
             }
             100% { 
-                /* 飞向右上角远方 */
-                transform: translate(-50%, -50%) translate3d(50vmax, -50vmax, 0);
-                opacity: 0;
+                transform: translate3d(120vmax, -120vmax, 0);
+                opacity: 1;
             }
         }
 
@@ -143,14 +136,12 @@
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1); 
         }
         
-        /* Loading Screen */
         #app-loading {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            /* 保持与 Day 模式一致 */
             background: linear-gradient(to bottom, #3C84D6 0%, #4B97E2 33.33%, #69B1EA 66.66%, #7EBEE9 100%);
             z-index: 9999;
             overflow: hidden; 
@@ -162,34 +153,28 @@
 
         .plane-fly {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            /* 初始居中定位 */
-            transform: translate(-50%, -50%);
-            animation: flyAcrossCenter 5s linear infinite;
+            left: 0;
+            bottom: 0;
+            animation: flyAcross 5s linear infinite;
         }
         
-        /* FIX: 强制 Body 背景色为日间蓝，避免弹簧效果露白 */
+        /* FIX: Body 背景恢复白色，去除 JS 动态变色 */
         body, html {
             height: 100%;
             margin: 0;
             padding: 0;
             -webkit-tap-highlight-color: transparent; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #3C84D6; 
-            transition: background-color 1s ease-in-out;
+            background-color: #f8fafc;
         }
     </style>
 </head>
 <body class="text-slate-800">
     
-    <!-- Loading Screen -->
     <div id="app-loading">
-        <!-- 飞机：缩小为 text-[3rem] -->
         <div class="plane-fly text-[3rem] z-0 opacity-80 drop-shadow-lg" style="text-shadow: 0 10px 20px rgba(0,0,0,0.1)">
             ✈️
         </div>
-        <!-- 文字：上层 -->
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center pointer-events-none">
             <p class="text-white text-lg font-black tracking-[0.5em] animate-pulse drop-shadow-md">LOADING</p>
             <div class="w-8 h-1 bg-white/50 mt-2 rounded-full"></div>
@@ -402,6 +387,7 @@
             </div>
         );
 
+        // --- PWA 安装引导组件 ---
         const InstallGuideModal = ({ isOpen, onClose }) => {
             const [isDesktop, setIsDesktop] = useState(false);
             useEffect(() => {
@@ -444,7 +430,7 @@
         const App = () => {
             const [flightTime, setFlightTime] = useState('12:00');
             const [showPicker, setShowPicker] = useState(false);
-            const [version] = useState("V 1.0 (251216-020500) - 141 (Visuals Restored)"); 
+            const [version] = useState("V 1.0 (251216-034500) - 145 (Status Bar Perfected)"); 
             
             const [showInstall, setShowInstall] = useState(false);
             
@@ -458,6 +444,7 @@
             
             const [timeOfDay, setTimeOfDay] = useState('day');
 
+            // Loading Screen Logic (2500ms delay)
             useEffect(() => {
                 const loader = document.getElementById('app-loading');
                 if (loader) {
@@ -470,6 +457,8 @@
                 }
             }, []);
 
+            // FIX: Dynamic Theme Color (Only for Android/Desktop)
+            // iOS PWA relies on viewport-fit=cover + CSS background
             useEffect(() => {
                 const themeColors = {
                     sunrise: '#5891D9',
@@ -477,15 +466,10 @@
                     dusk: '#384189',
                     night: '#0E1428'
                 };
-                
                 const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-                const updateTheme = () => {
-                     if (metaThemeColor && themeColors[timeOfDay]) {
-                        metaThemeColor.setAttribute('content', themeColors[timeOfDay]);
-                        document.body.style.backgroundColor = themeColors[timeOfDay];
-                    }
+                if (metaThemeColor && themeColors[timeOfDay]) {
+                    metaThemeColor.setAttribute('content', themeColors[timeOfDay]);
                 }
-                updateTheme();
             }, [timeOfDay]);
 
             useEffect(() => {
@@ -523,14 +507,11 @@
                 <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex justify-center">
                     <div className="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col relative">
                         
-                        {/* --- 主视窗 (FIX: Added padding-top for safe area) --- */}
+                        {/* --- 主视窗 --- */}
+                        {/* FIX: 使用内联 padding-top 来避让刘海，这样背景色就能顶上去 */}
                         <div 
                             className="text-white px-6 relative z-10 overflow-hidden flex flex-col pb-[10.58%] transition-colors duration-1000"
-                            style={{ 
-                                /* FIX: 恢复 aspect-[100/67] 逻辑，确保高度足够，同时 padding-top 避开刘海 */
-                                aspectRatio: '100/67',
-                                paddingTop: 'env(safe-area-inset-top)' 
-                            }}
+                            style={{ paddingTop: 'env(safe-area-inset-top)' }}
                         >
                             
                             {/* --- 四层背景叠放 --- */}
