@@ -166,14 +166,34 @@
         }
         
         body { -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; }
+        
+        /* FIX: 橙色卡片颜色调整 #ff4e00 (255, 78, 0), 透明度 70% */
+        .glass-panel-orange { 
+            background: rgba(255, 78, 0, 0.7); 
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px); 
+            border: 1px solid rgba(255, 255, 255, 0.25); 
+            box-shadow: 0 8px 32px rgba(255, 100, 0, 0.25); 
+        }
+
+        .glass-panel-white { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
+        
+        .glass-modal { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px); 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1); 
+        }
     </style>
 </head>
 <body class="text-slate-800">
     
-    <!-- Loading Screen -->
+    <!-- FIX: Updated Loading Screen HTML -->
     <div id="app-loading">
         <!-- 下层：飞机动画 (z-0) -->
-        <div class="plane-fly text-[4rem] z-0 opacity-80 drop-shadow-lg" style="text-shadow: 0 10px 20px rgba(0,0,0,0.1)">
+        <!-- FIX: 飞机缩小 text-[4rem] -> text-[3rem] -->
+        <div class="plane-fly text-[3rem] z-0 opacity-80 drop-shadow-lg" style="text-shadow: 0 10px 20px rgba(0,0,0,0.1)">
             ✈️
         </div>
 
@@ -445,7 +465,7 @@
         const App = () => {
             const [flightTime, setFlightTime] = useState('12:00');
             const [showPicker, setShowPicker] = useState(false);
-            const [version] = useState("V 1.0 (251216-001700) - 133 (Orange Card Tweak)"); 
+            const [version] = useState("V 1.0 (251216-003400) - 134 (Tweaks)"); 
             
             const [showInstall, setShowInstall] = useState(false);
             
