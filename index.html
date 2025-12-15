@@ -64,6 +64,23 @@
             animation: flyDiagonal linear forwards;
         }
 
+        /* --- Loading 动画 --- */
+        @keyframes flyAcross {
+            0% { 
+                left: -10%; 
+                bottom: -10%; 
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            100% { 
+                left: 120%; 
+                bottom: 120%; 
+                opacity: 1;
+            }
+        }
+
         /* --- 大师级配色系统 (Final Palette) --- */
         .bg-gradient-sunrise { background: linear-gradient(to bottom, #5891D9 0%, #8FA9C6 33.33%, #DEBD8D 66.66%, #EBDB81 100%); }
         .bg-gradient-day { background: linear-gradient(to bottom, #3C84D6 0%, #4B97E2 33.33%, #69B1EA 66.66%, #7EBEE9 100%); }
@@ -110,10 +127,16 @@
         .hide-scrollbar { scrollbar-width: none; }
 
         .glass-panel-white { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
-        /* 橙卡透明度 75% */
-        .glass-panel-orange { background: rgba(255, 100, 0, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 8px 32px rgba(255, 100, 0, 0.25); }
+        
+        /* FIX: 橙色卡片颜色微调 (#ff5a00, 80% opacity) */
+        .glass-panel-orange { 
+            background: rgba(255, 90, 0, 0.8); 
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px); 
+            border: 1px solid rgba(255, 255, 255, 0.25); 
+            box-shadow: 0 8px 32px rgba(255, 100, 0, 0.25); 
+        }
 
-        /* PWA 弹窗专用的高透白色毛玻璃 */
         .glass-modal { 
             background: rgba(255, 255, 255, 0.85); 
             backdrop-filter: blur(16px); 
@@ -122,10 +145,45 @@
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1); 
         }
         
+        /* Loading Screen Styles */
+        #app-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 背景：使用日间渐变 */
+            background: linear-gradient(to bottom, #3C84D6 0%, #4B97E2 33.33%, #69B1EA 66.66%, #7EBEE9 100%);
+            z-index: 9999;
+            overflow: hidden; 
+            transition: opacity 0.5s ease-out;
+        }
+
+        .plane-fly {
+            position: absolute;
+            /* 速度放慢1倍 (5s) */
+            animation: flyAcross 5s linear infinite;
+        }
+        
         body { -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; }
     </style>
 </head>
 <body class="text-slate-800">
+    
+    <!-- Loading Screen -->
+    <div id="app-loading">
+        <!-- 下层：飞机动画 (z-0) -->
+        <div class="plane-fly text-[4rem] z-0 opacity-80 drop-shadow-lg" style="text-shadow: 0 10px 20px rgba(0,0,0,0.1)">
+            ✈️
+        </div>
+
+        <!-- 上层：LOADING 文字 (z-10) -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
+            <p class="text-white text-lg font-black tracking-[0.5em] animate-pulse drop-shadow-md">LOADING</p>
+            <div class="w-8 h-1 bg-white/50 mt-2 rounded-full"></div>
+        </div>
+    </div>
+
     <div id="root"></div>
 
     <script type="text/babel">
@@ -206,7 +264,7 @@
             <ScriptCar emoji="🚙" size="2.7rem" duration={4} delay={2.5} reverse={true} zIndex={50} />
         </>);
 
-        // 车3 (Service) + 1辆反向 (50%处相遇)
+        // 车3 (Service) + 1辆反向
         const SceneCarsService = () => (<>
             {/* 反向车 */}
             <ScriptCar emoji="🚕" size="2.7rem" duration={4} delay={0} reverse={true} zIndex={50} />
@@ -357,7 +415,7 @@
             return (
                 <div className="fixed inset-0 z-[100] flex flex-col justify-end sm:justify-center items-center" style={{zIndex: 9999}}>
                     <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] animate-fade-in" onClick={onClose}></div>
-                    <div className="relative glass-modal w-full max-w-sm sm:rounded-3xl rounded-t-3xl overflow-hidden animate-slide-up p-6">
+                    <div className="relative glass-modal w-full max-w-sm sm:rounded-3xl rounded-t-3xl overflow-hidden animate-slide-up p-6 pb-10">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">📲 添加到桌面</h3>
                             <button onClick={onClose} className="p-2 bg-white/50 hover:bg-white/80 rounded-full text-slate-500 transition-colors"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
@@ -387,7 +445,7 @@
         const App = () => {
             const [flightTime, setFlightTime] = useState('12:00');
             const [showPicker, setShowPicker] = useState(false);
-            const [version] = useState("V 1.0 (251215-035700) - 128 (Resend Milestone 4)"); 
+            const [version] = useState("V 1.0 (251216-001700) - 133 (Orange Card Tweak)"); 
             
             const [showInstall, setShowInstall] = useState(false);
             
@@ -399,8 +457,20 @@
             const [boardingBuffer, setBoardingBuffer] = useState(40);
             const [result, setResult] = useState(null);
             
-            // 状态: 'sunrise' | 'day' | 'dusk' | 'night'
             const [timeOfDay, setTimeOfDay] = useState('day');
+
+            // FIX: Loading Screen Logic (2500ms delay)
+            useEffect(() => {
+                const loader = document.getElementById('app-loading');
+                if (loader) {
+                    setTimeout(() => {
+                        loader.style.opacity = '0';
+                        setTimeout(() => {
+                            loader.style.display = 'none';
+                        }, 500);
+                    }, 2500); 
+                }
+            }, []);
 
             useEffect(() => {
                 if (!flightTime) return;
@@ -416,7 +486,6 @@
                 
                 setResult({ leaveHome, arriveAirport, finishCheckIn, finishSecurity, startWalk, gateArrival, takeoffDate, totalMinutes });
 
-                // --- 4时段判定逻辑 ---
                 const h = leaveHome.getHours();
                 if (h >= 5 && h < 8) {
                     setTimeOfDay('sunrise');
@@ -453,10 +522,11 @@
                                 
                                 {/* Emoji 云彩 */}
                                 <div className={`absolute inset-0 pointer-events-none select-none overflow-hidden z-10 transition-opacity duration-1000 ${timeOfDay === 'night' ? 'opacity-60' : 'opacity-100'}`}>
-                                    <div className="absolute animate-drift-right text-[5.4rem] leading-none text-white" style={{ bottom: '140px', left: '-20%', animationDuration: '15s', animationDelay: '-10s' }}>☁️</div>
-                                    <div className="absolute animate-drift-right text-[5.4rem] leading-none text-white" style={{ bottom: '120px', left: '-30%', animationDuration: '18s', animationDelay: '-3s' }}>☁️</div>
-                                    <div className="absolute animate-drift-right text-[2.7rem] leading-none text-white" style={{ bottom: '90px', left: '-10%', animationDuration: '25s', animationDelay: '-2s' }}>☁️</div>
-                                    <div className="absolute animate-drift-right text-[2.7rem] leading-none text-white" style={{ bottom: '100px', left: '-40%', animationDuration: '22s', animationDelay: '-15s' }}>☁️</div>
+                                    {/* FIX: Cloud Speed Reduced (15s->45s, 18s->50s, 25s->60s, 22s->75s) */}
+                                    <div className="absolute animate-drift-right text-[5.4rem] leading-none text-white" style={{ bottom: '140px', left: '-20%', animationDuration: '45s', animationDelay: '-10s' }}>☁️</div>
+                                    <div className="absolute animate-drift-right text-[5.4rem] leading-none text-white" style={{ bottom: '120px', left: '-30%', animationDuration: '50s', animationDelay: '-3s' }}>☁️</div>
+                                    <div className="absolute animate-drift-right text-[2.7rem] leading-none text-white" style={{ bottom: '90px', left: '-10%', animationDuration: '60s', animationDelay: '-2s' }}>☁️</div>
+                                    <div className="absolute animate-drift-right text-[2.7rem] leading-none text-white" style={{ bottom: '100px', left: '-40%', animationDuration: '75s', animationDelay: '-15s' }}>☁️</div>
                                 </div>
 
                                 {/* 顶部垫片：A */}
