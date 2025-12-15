@@ -2,15 +2,17 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- FIX: 仅开启 viewport-fit=cover，不做其他 padding 干预 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- 状态栏颜色：Android/Desktop 使用日间蓝，iOS PWA 由 black-translucent 接管 -->
-    <meta name="theme-color" content="#3C84D6">
+    <!-- 状态栏透明 (iOS) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="飞前准">
+    <!-- Android/Desktop 状态栏颜色跟随日间背景 -->
+    <meta name="theme-color" content="#3C84D6">
     
-    <!-- PWA 配置 (Base64) -->
+    <!-- PWA 配置 -->
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiRmx5cHJlIiwic2hvcnRfbmFtZSI6IkZseXByZSIsImRlc2NyaXB0aW9uIjoi5Y1S5o6o5pe26Ze0IOS7juWuuVxu5Y+RIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMzYjgyZjYiLCJ0aGVtZV9jb2xvciI6IiMzYjgyZjYiLCJvcmllbnRhdGlvbiI6InBvcnRyYWl0IiwiaWNvbnMiOlt7InNyYyI6Imljb24tMTkyLnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiJpY29uLTUxMi5wbmciLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIiwicHVycG9zZSI6ImFueSBtYXNrYWJsZSJ9XX0=">
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -67,16 +69,17 @@
         }
 
         /* --- Loading 动画 --- */
-        @keyframes flyAcross {
+        /* 保持修正后的居中穿梭逻辑 */
+        @keyframes flyAcrossCenter {
             0% { 
-                transform: translate3d(-20vmax, 20vmax, 0);
+                transform: translate(-50%, -50%) translate3d(-60vmax, 60vmax, 0);
                 opacity: 0;
             }
             10% {
                 opacity: 1;
             }
             100% { 
-                transform: translate3d(120vmax, -120vmax, 0);
+                transform: translate(-50%, -50%) translate3d(60vmax, -60vmax, 0);
                 opacity: 1;
             }
         }
@@ -126,7 +129,15 @@
         .hide-scrollbar { scrollbar-width: none; }
 
         .glass-panel-white { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
-        .glass-panel-orange { background: rgba(255, 96, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 8px 32px rgba(255, 100, 0, 0.25); }
+        
+        /* 橙色卡片: #ff6000, 70% opacity */
+        .glass-panel-orange { 
+            background: rgba(255, 96, 0, 0.7); 
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px); 
+            border: 1px solid rgba(255, 255, 255, 0.25); 
+            box-shadow: 0 8px 32px rgba(255, 100, 0, 0.25); 
+        }
 
         .glass-modal { 
             background: rgba(255, 255, 255, 0.85); 
@@ -136,6 +147,7 @@
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1); 
         }
         
+        /* Loading Screen */
         #app-loading {
             position: fixed;
             top: 0;
@@ -153,12 +165,13 @@
 
         .plane-fly {
             position: absolute;
-            left: 0;
-            bottom: 0;
-            animation: flyAcross 5s linear infinite;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: flyAcrossCenter 5s linear infinite;
         }
         
-        /* FIX: Body 背景恢复白色，去除 JS 动态变色 */
+        /* Body 恢复白色背景，不跟随状态栏变色 */
         body, html {
             height: 100%;
             margin: 0;
@@ -171,6 +184,7 @@
 </head>
 <body class="text-slate-800">
     
+    <!-- Loading Screen -->
     <div id="app-loading">
         <div class="plane-fly text-[3rem] z-0 opacity-80 drop-shadow-lg" style="text-shadow: 0 10px 20px rgba(0,0,0,0.1)">
             ✈️
@@ -430,7 +444,7 @@
         const App = () => {
             const [flightTime, setFlightTime] = useState('12:00');
             const [showPicker, setShowPicker] = useState(false);
-            const [version] = useState("V 1.0 (251216-034500) - 145 (Status Bar Perfected)"); 
+            const [version] = useState("V 1.0 (251216-045500) - 147 (Pure Fullscreen)"); 
             
             const [showInstall, setShowInstall] = useState(false);
             
@@ -444,7 +458,7 @@
             
             const [timeOfDay, setTimeOfDay] = useState('day');
 
-            // Loading Screen Logic (2500ms delay)
+            // Loading Screen Logic
             useEffect(() => {
                 const loader = document.getElementById('app-loading');
                 if (loader) {
@@ -457,8 +471,7 @@
                 }
             }, []);
 
-            // FIX: Dynamic Theme Color (Only for Android/Desktop)
-            // iOS PWA relies on viewport-fit=cover + CSS background
+            // Dynamic Theme Color Logic
             useEffect(() => {
                 const themeColors = {
                     sunrise: '#5891D9',
@@ -508,11 +521,8 @@
                     <div className="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col relative">
                         
                         {/* --- 主视窗 --- */}
-                        {/* FIX: 使用内联 padding-top 来避让刘海，这样背景色就能顶上去 */}
-                        <div 
-                            className="text-white px-6 relative z-10 overflow-hidden flex flex-col pb-[10.58%] transition-colors duration-1000"
-                            style={{ paddingTop: 'env(safe-area-inset-top)' }}
-                        >
+                        {/* FIX: 彻底移除 padding-top hack，回归纯净布局 */}
+                        <div className="text-white px-6 relative z-10 overflow-hidden aspect-[100/67] flex flex-col pb-[10.58%] transition-colors duration-1000">
                             
                             {/* --- 四层背景叠放 --- */}
                             <div className={`absolute inset-0 bg-gradient-sunrise transition-opacity duration-1000 ease-in-out ${timeOfDay === 'sunrise' ? 'opacity-100' : 'opacity-0'}`} />
@@ -521,7 +531,7 @@
                             <div className={`absolute inset-0 bg-gradient-night transition-opacity duration-1000 ease-in-out ${timeOfDay === 'night' ? 'opacity-100' : 'opacity-0'}`} />
 
                             {/* 内容层 z-index 提升 */}
-                            <div className="absolute inset-0 z-10 flex flex-col px-6 pb-[10.58%] pt-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+                            <div className="absolute inset-0 z-10 flex flex-col px-6 pb-[10.58%] pt-0">
                                 <TrafficController />
                                 
                                 {/* Emoji 云彩 */}
@@ -568,6 +578,7 @@
                             <h2 className="text-xl font-bold text-slate-800 tracking-tight">全程预计耗时 : {result ? formatDuration(result.totalMinutes) : '0分钟'}</h2>
                             <div className="relative flex items-center justify-center mt-6 mb-2">
                                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-300"></div></div>
+                                {/* FIX: 文案修改 */}
                                 <div className="relative bg-white px-3 text-sm font-bold text-slate-600 flex items-center gap-2"><span className="animate-pulse">⏱️</span> 耗时调整</div>
                             </div>
                         </div>
