@@ -67,23 +67,6 @@
         }
 
         /* --- Loading 动画 --- */
-        @keyframes flyAcross {
-            0% { 
-                left: -10%; 
-                bottom: -10%; 
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            100% { 
-                left: 120%; 
-                bottom: 120%; 
-                opacity: 1;
-            }
-        }
-        
-        /* 居中穿梭 */
         @keyframes flyAcrossCenter {
             0% { 
                 transform: translate(-50%, -50%) translate3d(-60vmax, 60vmax, 0);
@@ -203,7 +186,6 @@
     <!-- Loading Screen -->
     <div id="app-loading">
         <!-- 下层：飞机动画 (z-0) -->
-        <!-- 飞机大小 text-[3rem] -->
         <div class="plane-fly text-[3rem] z-0 opacity-80 drop-shadow-lg" style="text-shadow: 0 10px 20px rgba(0,0,0,0.1)">
             ✈️
         </div>
@@ -476,7 +458,7 @@
         const App = () => {
             const [flightTime, setFlightTime] = useState('12:00');
             const [showPicker, setShowPicker] = useState(false);
-            const [version] = useState("V 1.0 (251216-013200) - 139 (Strict Fix)"); 
+            const [version] = useState("V 1.0 (251216-033000) - 143 (Layout Preservation)"); 
             
             const [showInstall, setShowInstall] = useState(false);
             
@@ -490,7 +472,7 @@
             
             const [timeOfDay, setTimeOfDay] = useState('day');
 
-            // Loading Screen Logic (2500ms delay)
+            // Loading Screen Logic
             useEffect(() => {
                 const loader = document.getElementById('app-loading');
                 if (loader) {
@@ -503,7 +485,7 @@
                 }
             }, []);
 
-            // FIX: Dynamic Theme Color + Body Background Logic
+            // Dynamic Theme Color Logic
             useEffect(() => {
                 const themeColors = {
                     sunrise: '#5891D9',
@@ -516,12 +498,10 @@
                 const updateTheme = () => {
                      if (metaThemeColor && themeColors[timeOfDay]) {
                         metaThemeColor.setAttribute('content', themeColors[timeOfDay]);
-                        // Ensure body background matches for smooth transitions
                         document.body.style.backgroundColor = themeColors[timeOfDay];
                     }
                 }
                 updateTheme();
-                
             }, [timeOfDay]);
 
             useEffect(() => {
@@ -559,17 +539,23 @@
                 <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex justify-center">
                     <div className="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col relative">
                         
-                        {/* --- 主视窗 --- */}
-                        <div className="text-white px-6 relative z-10 overflow-hidden aspect-[100/67] flex flex-col pb-[10.58%]">
+                        {/* --- 主视窗 (FIX: 高度计算与 padding 补偿，实现布局无损延伸) --- */}
+                        <div 
+                            className="text-white px-6 relative z-10 overflow-hidden flex flex-col pb-[10.58%] transition-colors duration-1000"
+                            style={{ 
+                                height: 'calc(67vw + env(safe-area-inset-top))', 
+                                paddingTop: 'env(safe-area-inset-top)' 
+                            }}
+                        >
                             
-                            {/* --- 四层背景叠放，利用 opacity 实现无缝切换 --- */}
+                            {/* --- 四层背景叠放 --- */}
                             <div className={`absolute inset-0 bg-gradient-sunrise transition-opacity duration-1000 ease-in-out ${timeOfDay === 'sunrise' ? 'opacity-100' : 'opacity-0'}`} />
                             <div className={`absolute inset-0 bg-gradient-day transition-opacity duration-1000 ease-in-out ${timeOfDay === 'day' ? 'opacity-100' : 'opacity-0'}`} />
                             <div className={`absolute inset-0 bg-gradient-dusk transition-opacity duration-1000 ease-in-out ${timeOfDay === 'dusk' ? 'opacity-100' : 'opacity-0'}`} />
                             <div className={`absolute inset-0 bg-gradient-night transition-opacity duration-1000 ease-in-out ${timeOfDay === 'night' ? 'opacity-100' : 'opacity-0'}`} />
 
                             {/* 内容层 z-index 提升 */}
-                            <div className="absolute inset-0 z-10 flex flex-col px-6 pb-[10.58%] pt-0">
+                            <div className="absolute inset-0 z-10 flex flex-col px-6 pb-[10.58%] pt-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
                                 <TrafficController />
                                 
                                 {/* Emoji 云彩 */}
@@ -616,7 +602,6 @@
                             <h2 className="text-xl font-bold text-slate-800 tracking-tight">全程预计耗时 : {result ? formatDuration(result.totalMinutes) : '0分钟'}</h2>
                             <div className="relative flex items-center justify-center mt-6 mb-2">
                                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-300"></div></div>
-                                {/* FIX: 文案修改 */}
                                 <div className="relative bg-white px-3 text-sm font-bold text-slate-600 flex items-center gap-2"><span className="animate-pulse">⏱️</span> 耗时调整</div>
                             </div>
                         </div>
