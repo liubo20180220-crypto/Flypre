@@ -2,17 +2,15 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- FIX: 仅开启 viewport-fit=cover，不做其他 padding 干预 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- 状态栏透明 (iOS) -->
+    <!-- 初始状态栏颜色 (日间) -->
+    <meta name="theme-color" content="#3C84D6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="飞前准">
-    <!-- Android/Desktop 状态栏颜色跟随日间背景 -->
-    <meta name="theme-color" content="#3C84D6">
     
-    <!-- PWA 配置 -->
+    <!-- PWA 配置 (Base64 内联) -->
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiRmx5cHJlIiwic2hvcnRfbmFtZSI6IkZseXByZSIsImRlc2NyaXB0aW9uIjoi5Y1S5o6o5pe26Ze0IOS7juWuuVxu5Y+RIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMzYjgyZjYiLCJ0aGVtZV9jb2xvciI6IiMzYjgyZjYiLCJvcmllbnRhdGlvbiI6InBvcnRyYWl0IiwiaWNvbnMiOlt7InNyYyI6Imljb24tMTkyLnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiJpY29uLTUxMi5wbmciLCJzaXplcyI6IjUxMng1MTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIiwicHVycG9zZSI6ImFueSBtYXNrYWJsZSJ9XX0=">
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -69,7 +67,6 @@
         }
 
         /* --- Loading 动画 --- */
-        /* 保持修正后的居中穿梭逻辑 */
         @keyframes flyAcrossCenter {
             0% { 
                 transform: translate(-50%, -50%) translate3d(-60vmax, 60vmax, 0);
@@ -93,6 +90,7 @@
         /* 组件样式 */
         input[type=range] { -webkit-appearance: none; background: transparent; }
         
+        /* 把手: #4B97E2 */
         input[type=range]::-webkit-slider-thumb { 
             -webkit-appearance: none; 
             height: 24px; 
@@ -147,7 +145,7 @@
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1); 
         }
         
-        /* Loading Screen */
+        /* Loading Screen Styles */
         #app-loading {
             position: fixed;
             top: 0;
@@ -171,14 +169,15 @@
             animation: flyAcrossCenter 5s linear infinite;
         }
         
-        /* Body 恢复白色背景，不跟随状态栏变色 */
+        /* Body 样式: 带有背景色过渡，用于平滑状态栏切换 */
         body, html {
             height: 100%;
             margin: 0;
             padding: 0;
             -webkit-tap-highlight-color: transparent; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #f8fafc;
+            background-color: #3C84D6; 
+            transition: background-color 1s ease-in-out;
         }
     </style>
 </head>
@@ -255,6 +254,7 @@
             <ScriptCar emoji="🚎" size="4rem" duration={6.6} delay={4.0} />
             <ScriptCar emoji="🚙" size="2.7rem" duration={4.4} delay={6.5} />
             <ScriptCar emoji="🚗" size="2.7rem" duration={4} delay={7.8} />
+            
             <ScriptCar emoji="🚌" size="4rem" duration={4} delay={3.5} reverse={true} zIndex={50} />
             <ScriptCar emoji="🚕" size="2.7rem" duration={3.5} delay={5.0} reverse={true} zIndex={50} />
         </>);
@@ -264,6 +264,7 @@
             <ScriptCar emoji="🛺" size="2.7rem" duration={20} delay={0} zIndex={15} />   
             <ScriptCar emoji="🚕" size="2.7rem" duration={5} delay={1} zIndex={25} />
             <ScriptCar emoji="🏎️" size="3.6rem" duration={2} delay={2.5} zIndex={30} customBottom="-2px" />
+            
             <ScriptCar emoji="🚙" size="2.7rem" duration={4} delay={2.5} reverse={true} zIndex={50} />
         </>);
 
@@ -401,7 +402,6 @@
             </div>
         );
 
-        // --- PWA 安装引导组件 ---
         const InstallGuideModal = ({ isOpen, onClose }) => {
             const [isDesktop, setIsDesktop] = useState(false);
             useEffect(() => {
@@ -444,7 +444,7 @@
         const App = () => {
             const [flightTime, setFlightTime] = useState('12:00');
             const [showPicker, setShowPicker] = useState(false);
-            const [version] = useState("V 1.0 (251216-045500) - 147 (Pure Fullscreen)"); 
+            const [version] = useState("V 1.0 (251216-031500) - 143 (Smooth Status Bar Transition)"); 
             
             const [showInstall, setShowInstall] = useState(false);
             
@@ -471,7 +471,7 @@
                 }
             }, []);
 
-            // Dynamic Theme Color Logic
+            // Dynamic Theme Color + Body BG Logic
             useEffect(() => {
                 const themeColors = {
                     sunrise: '#5891D9',
@@ -479,10 +479,15 @@
                     dusk: '#384189',
                     night: '#0E1428'
                 };
+                
                 const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-                if (metaThemeColor && themeColors[timeOfDay]) {
-                    metaThemeColor.setAttribute('content', themeColors[timeOfDay]);
+                const updateTheme = () => {
+                     if (metaThemeColor && themeColors[timeOfDay]) {
+                        metaThemeColor.setAttribute('content', themeColors[timeOfDay]);
+                        document.body.style.backgroundColor = themeColors[timeOfDay];
+                    }
                 }
+                updateTheme();
             }, [timeOfDay]);
 
             useEffect(() => {
@@ -521,8 +526,7 @@
                     <div className="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col relative">
                         
                         {/* --- 主视窗 --- */}
-                        {/* FIX: 彻底移除 padding-top hack，回归纯净布局 */}
-                        <div className="text-white px-6 relative z-10 overflow-hidden aspect-[100/67] flex flex-col pb-[10.58%] transition-colors duration-1000">
+                        <div className="text-white px-6 relative z-10 overflow-hidden aspect-[100/67] flex flex-col pb-[10.58%]">
                             
                             {/* --- 四层背景叠放 --- */}
                             <div className={`absolute inset-0 bg-gradient-sunrise transition-opacity duration-1000 ease-in-out ${timeOfDay === 'sunrise' ? 'opacity-100' : 'opacity-0'}`} />
