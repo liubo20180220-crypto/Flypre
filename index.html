@@ -112,6 +112,7 @@
         .glass-panel-white { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
         .glass-panel-orange { background: rgba(255, 100, 0, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 8px 32px rgba(255, 100, 0, 0.25); }
 
+        /* PWA 弹窗专用的高透白色毛玻璃 */
         .glass-modal { 
             background: rgba(255, 255, 255, 0.85); 
             backdrop-filter: blur(16px); 
@@ -204,7 +205,7 @@
             <ScriptCar emoji="🚙" size="2.7rem" duration={4} delay={2.5} reverse={true} zIndex={50} />
         </>);
 
-        // 车3 (Service) + 1辆反向
+        // 车3 (Service) + 1辆反向 (50%处相遇)
         const SceneCarsService = () => (<>
             {/* 反向车 */}
             <ScriptCar emoji="🚕" size="2.7rem" duration={4} delay={0} reverse={true} zIndex={50} />
@@ -385,7 +386,7 @@
         const App = () => {
             const [flightTime, setFlightTime] = useState('12:00');
             const [showPicker, setShowPicker] = useState(false);
-            const [version] = useState("V 1.0 (251215-035700) - 128 (Resend Milestone 4)"); 
+            const [version] = useState("V 1.0 (251215-110000) - 126 (Picker Scroll Lock)"); 
             
             const [showInstall, setShowInstall] = useState(false);
             
